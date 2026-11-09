@@ -15,21 +15,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
+      - name: Setup Android SDK
         run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+          yes | sdkmanager --licenses > /dev/null || true
+
+          sdkmanager \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Create Android project
-        shell: bash
         run: |
           mkdir -p app/src/main/java/com/valorpharma/invoice
           mkdir -p app/src/main/assets
@@ -47,7 +52,7 @@ jobs:
           }
 
           dependencyResolutionManagement {
-              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS
               repositories {
                   google()
                   mavenCentral()
@@ -88,8 +93,7 @@ jobs:
               <style name="AppTheme"
                      parent="android:style/Theme.Material.Light.NoActionBar">
                   <item name="android:fontFamily">sans</item>
-                  <item
-                  name="android:windowLightStatusBar">false</item>
+                  <item name="android:windowLightStatusBar">false</item>
                   <item name="android:colorAccent">#173B53</item>
               </style>
           </resources>
@@ -148,7 +152,6 @@ jobs:
                   settings.setAllowContentAccess(true);
 
                   webView.setWebViewClient(new WebViewClient());
-
                   webView.loadUrl("file:///android_asset/index.html");
 
                   setContentView(webView);
